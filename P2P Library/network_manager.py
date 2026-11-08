@@ -474,18 +474,37 @@ class NetworkManager:
         count = self.hypergraph.load_from_csv(target_file)
         print(colorize(f"✓ Loaded {count} hyperedge(s) from '{target_file}'.", Colors.GREEN))
 
-    def plot_hypergraph_visualization(self, output_png: str = "hypergraph_plot.png"):
+    def plot_hypergraph_visualization(self, style: str = "dashboard", output_path: Optional[str] = None, live: bool = False):
         """Generate and display visual hypergraph plot using Matplotlib & NetworkX."""
+        if self.nodes:
+            self.export_topology_csv("connections.csv")
         self.hypergraph.save_to_csv("hypergraph.csv")
-        self.export_topology_csv("connections.csv")
 
         script_path = os.path.join(os.path.dirname(__file__), "visualize_hypergraph.py")
         venv_python = os.path.join(os.path.dirname(__file__), ".venv", "bin", "python")
         python_bin = venv_python if os.path.exists(venv_python) else sys.executable
 
+        if live or style == "live":
+            actual_style = "dashboard" if style == "live" else style
+            try:
+                cmd = [python_bin, script_path, "--live", "--style", actual_style]
+                subprocess.Popen(cmd)
+                print(colorize(f"🚀 Launched live interactive hypergraph window ({actual_style}) in background!", Colors.BOLD + Colors.CYAN))
+                print(colorize("   • Dynamic real-time animation with zero disk writes.", Colors.GREEN))
+                print(colorize("   • Window auto-updates live as you create/remove hyperedges and connect peers!", Colors.DIM))
+            except Exception as e:
+                print(colorize(f"Error launching live visualizer: {e}", Colors.RED))
+            return
+
+        default_out = "hypergraph.html" if style in ("html", "interactive") else (
+            f"hypergraph_{style}.png" if style not in ("dashboard", "all") else "hypergraph_plot.png"
+        )
+        target_out = output_path or default_out
+
         try:
-            subprocess.run([python_bin, script_path, "--output", output_png], check=True)
-            print(colorize(f"✓ Visual hypergraph plot generated: '{output_png}'", Colors.GREEN))
+            cmd = [python_bin, script_path, "--style", style, "--output", target_out]
+            subprocess.run(cmd, check=True)
+            print(colorize(f"✓ Hypergraph plot ({style}) generated: '{target_out}'", Colors.GREEN))
         except Exception as e:
             print(colorize(f"Error generating plot: {e}", Colors.RED))
 
@@ -708,7 +727,7 @@ Hypergraph Clusters:
   • {colorize("hyper create <id> <nodes> [name]", Colors.MAGENTA)}   - Define hyperedge (e.g., hyper create H1 Node-1,Node-2,Node-3 Quorum)
   • {colorize("hyper send <id> <sender> <msg>", Colors.MAGENTA)}     - Multicast message ONLY to hyperedge members
   • {colorize("hyper node <node_id>", Colors.MAGENTA)}               - Show which hyperedges a node belongs to
-  • {colorize("hyper plot / visualize", Colors.MAGENTA)}             - Plot & open Hypergraph image (Matplotlib & NetworkX)
+  • {colorize("hyper plot / visualize [style]", Colors.MAGENTA)}     - Plot Hypergraph: dashboard (4-in-1), dual, matrix, euler, bipartite, html
   • {colorize("hyper save / load", Colors.MAGENTA)}                  - Persist or reload hyperedges from hypergraph.csv
 
 CSV Topology:
@@ -839,8 +858,22 @@ CSV Topology:
                 self.load_topology_csv(target_file)
 
             elif cmd in ("plot", "visualize", "hyperplot", "hyper_plot"):
-                out_path = args[0] if args else "hypergraph_plot.png"
-                self.plot_hypergraph_visualization(out_path)
+                style = "dashboard"
+                out_path = None
+                is_live = False
+                if args:
+                    lower_args = [a.lower() for a in args]
+                    if "live" in lower_args:
+                        is_live = True
+                        lower_args.remove("live")
+                    if lower_args:
+                        first = lower_args[0]
+                        if first in ("dashboard", "dual", "matrix", "euler", "bipartite", "html", "interactive", "all"):
+                            style = first
+                            out_path = lower_args[1] if len(lower_args) > 1 else None
+                        else:
+                            out_path = lower_args[0]
+                self.plot_hypergraph_visualization(style=style, output_path=out_path, live=is_live)
 
             elif cmd == "test":
                 self.run_automated_suite()

@@ -1,0 +1,11 @@
+source_node,target_node,target_host,target_port,direction,latency_ms,status,timestamp
+Node-1,Node-5,127.0.0.1,8005,bidirectional,0.66,connected,2026-11-08 11:43:13
+Node-1,Node-2,127.0.0.1,8002,outbound,0.26,connected,2026-11-08 11:43:13
+Node-1,Node-3,127.0.0.1,8003,outbound,0.27,connected,2026-11-08 11:43:13
+Node-1,Node-4,127.0.0.1,8004,outbound,0.22,connected,2026-11-08 11:43:13
+Node-2,Node-3,127.0.0.1,8003,outbound,0.18,connected,2026-11-08 11:43:13
+Node-2,Node-4,127.0.0.1,8004,outbound,0.18,connected,2026-11-08 11:43:13
+Node-2,Node-5,127.0.0.1,8005,outbound,0.18,connected,2026-11-08 11:43:13
+Node-3,Node-4,127.0.0.1,8004,outbound,0.17,connected,2026-11-08 11:43:13
+Node-3,Node-5,127.0.0.1,8005,outbound,0.17,connected,2026-11-08 11:43:13
+Node-4,Node-5,127.0.0.1,8005,outbound,0.15,connected,2026-11-08 11:43:13

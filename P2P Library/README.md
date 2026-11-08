@@ -75,10 +75,19 @@ Inside the interactive manager:
    export_csv my_net.csv   # Save current live connections to CSV
    load_csv my_net.csv     # Restore all connection links from CSV
    ```
-9. **Visualize Hypergraph (Matplotlib & NetworkX)**:
+9. **Visualize Hypergraph (Live Animation & 6 Distinct Layouts)**:
    ```
-   plot                    # Generates and opens hypergraph_plot.png
+   plot live                # ⚡ Real-Time Live Animated Dashboard (FuncAnimation - No Disk Files!)
+   plot live euler          # Live animated Euler convex hull enclosure with multicast packet flows
+   plot live bipartite      # Live animated star-hub projection with streaming packets
+   plot                     # 4-in-1 Comprehensive Multi-view Dashboard (Default PNG)
+   plot dual                # Dual Line Graph (Inter-hyperedge bridges & routing)
+   plot matrix              # Incidence Matrix Heatmap (Node × Hyperedge table)
+   plot euler               # Euler Enclosure (Convex Hull translucent blobs)
+   plot bipartite           # Bipartite Projection (Star Hub view)
+   plot html                # Interactive browser explorer (hypergraph.html)
    ```
+   *Tip: In `plot live` mode, the window stays open and automatically hot-reloads whenever you create or modify hyperedges or connections in the terminal!*
 10. **Run automated verification tests**:
    ```
    test
@@ -128,6 +137,7 @@ If you want to open 4 or 5 terminal tabs/windows side-by-side to chat and test:
 | `send <peer_id> <msg>` | Send private direct message | `send Node-2 Hello Node 2!` |
 | `broadcast <msg>` | Broadcast to all peers | `broadcast Hello everyone!` |
 | `discover` | Query peers to find other nodes | `discover` |
+| `plot [style]` | Plot Hypergraph (dashboard, dual, matrix, html) | `plot matrix` |
 | `disconnect <peer_id>` | Disconnect from peer | `disconnect Node-2` |
 | `exit` / `quit` | Gracefully shut down node | `exit` |
 

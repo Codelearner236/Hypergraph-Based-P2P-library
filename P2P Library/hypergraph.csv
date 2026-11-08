@@ -1,4 +1,5 @@
 hyperedge_id,group_name,member_nodes,description,created_at
-H1,FastQuorum,"Node-1,Node-2,Node-3",Custom Hyperedge,1793818460.59
+H1,FastQuorum,"Node-1,Node-2,Node-3",# Create new 3-node hyperedge,1794118373.69
 H2,Storage_Shard_A,"Node-2,Node-3,Node-4,Node-5",4-node replicated storage group,1730740000.00
 H3,All_Mesh,"Node-1,Node-2,Node-3,Node-4,Node-5",All nodes full hyperedge broadcast,1730740000.00
+H_TEST,Test_Cluster,"Node-1,Node-2,Node-3",3-node multicast test group,1794119660.20

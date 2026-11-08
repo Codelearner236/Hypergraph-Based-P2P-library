@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# macOS
+.DS_Store
+
+# Output plots and temporary visualizer exports
+hypergraph_plot.png
+hypergraph_*.png
+hypergraph.html
+test_connections.csv
+test_hypergraph.csv
+

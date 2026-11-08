@@ -12,6 +12,7 @@ import time
 import threading
 import shlex
 import re
+import subprocess
 
 # Add parent directory to sys.path so p2p package can be imported directly
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
@@ -40,6 +41,7 @@ Commands:
   {colorize("broadcast <msg>", Colors.GREEN)}         - Broadcast message to all connected peers
   {colorize("hyper list", Colors.MAGENTA)}               - List defined hyperedges in hypergraph.csv
   {colorize("hyper send <edge_id> <msg>", Colors.MAGENTA)} - Multicast message to hyperedge members
+  {colorize("plot [style]", Colors.MAGENTA)}             - Plot Hypergraph (dashboard, dual, matrix, euler, bipartite, html)
   {colorize("export_csv [file.csv]", Colors.YELLOW)}     - Save active peer connections to CSV
   {colorize("ping <peer_id>", Colors.GREEN)}          - Ping a peer and measure latency (ms)
   {colorize("ping_all", Colors.GREEN)}                - Ping all connected peers
@@ -90,6 +92,7 @@ class NodeCLI:
                 return None, []
 
         command_patterns = [
+            ("plot", r"(?:hyper\s+)?(?:plot|visualize)\b.*"),
             ("hyper_sub", r"hyper\s+(?:list|show|create|send)\b.*"),
             ("create_edge", r"(?:hyper\s+)?create\s+[A-Za-z0-9_]+\s+[A-Za-z0-9_,\-]+(?:,|Node)[A-Za-z0-9_,\-]*.*"),
             ("export_csv", r"export_csv\b.*"),
@@ -130,6 +133,38 @@ class NodeCLI:
             parts = line.split()
 
         return (parts[0].lower(), parts[1:]) if parts else (None, [])
+
+    def plot_hypergraph_visualization(self, style: str = "dashboard", output_path: Optional[str] = None, live: bool = False):
+        """Generate and display visual hypergraph plot using Matplotlib & NetworkX."""
+        self.hypergraph.save_to_csv("hypergraph.csv")
+        TopologyCSVManager.export_topology_to_csv({self.node_id: self.node}, "connections.csv")
+
+        script_path = os.path.join(os.path.dirname(__file__), "visualize_hypergraph.py")
+        venv_python = os.path.join(os.path.dirname(__file__), ".venv", "bin", "python")
+        python_bin = venv_python if os.path.exists(venv_python) else sys.executable
+
+        if live or style == "live":
+            actual_style = "dashboard" if style == "live" else style
+            try:
+                cmd = [python_bin, script_path, "--live", "--style", actual_style]
+                subprocess.Popen(cmd)
+                print(colorize(f"🚀 Launched live interactive hypergraph window ({actual_style}) in background!", Colors.BOLD + Colors.CYAN))
+                print(colorize("   • Dynamic real-time animation with zero disk writes.", Colors.GREEN))
+            except Exception as e:
+                print(colorize(f"Error launching live visualizer: {e}", Colors.RED))
+            return
+
+        default_out = "hypergraph.html" if style in ("html", "interactive") else (
+            f"hypergraph_{style}.png" if style not in ("dashboard", "all") else "hypergraph_plot.png"
+        )
+        target_out = output_path or default_out
+
+        try:
+            cmd = [python_bin, script_path, "--style", style, "--output", target_out]
+            subprocess.run(cmd, check=True)
+            print(colorize(f"✓ Hypergraph plot ({style}) generated: '{target_out}'", Colors.GREEN))
+        except Exception as e:
+            print(colorize(f"Error generating plot: {e}", Colors.RED))
 
     def start(self):
         self.node.start()
@@ -303,6 +338,24 @@ class NodeCLI:
                 target_file = args[0] if args else f"connections_{self.node_id}.csv"
                 count = TopologyCSVManager.export_topology_to_csv({self.node_id: self.node}, target_file)
                 print(colorize(f"✓ Exported {count} connection(s) to '{target_file}'.", Colors.GREEN))
+
+            elif cmd in ("plot", "visualize", "hyperplot", "hyper_plot"):
+                style = "dashboard"
+                out_path = None
+                is_live = False
+                if args:
+                    lower_args = [a.lower() for a in args]
+                    if "live" in lower_args:
+                        is_live = True
+                        lower_args.remove("live")
+                    if lower_args:
+                        first = lower_args[0]
+                        if first in ("dashboard", "dual", "matrix", "euler", "bipartite", "html", "interactive", "all"):
+                            style = first
+                            out_path = lower_args[1] if len(lower_args) > 1 else None
+                        else:
+                            out_path = lower_args[0]
+                self.plot_hypergraph_visualization(style=style, output_path=out_path, live=is_live)
 
             elif cmd == "disconnect":
                 if not args:
